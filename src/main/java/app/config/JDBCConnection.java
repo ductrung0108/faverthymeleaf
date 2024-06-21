@@ -1,6 +1,7 @@
 package app.config;
 
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -214,7 +215,7 @@ public class JDBCConnection {
         if (foodGroupList == null)
             return foodLossEvents;
 
-        String filter = "", f2 = "",filter1="";
+        String filter = "", f2 = "", filter1 = "";
         if (ac) {
             filter += ",activity";
             filter1 += ",activity as activity1";
@@ -382,13 +383,14 @@ public class JDBCConnection {
 
             // Process ResultSet and populate results
             while (resultSet.next()) {
+                DecimalFormat df = new DecimalFormat("#,###.###");
                 Map<String, Object> row = new HashMap<>();
                 row.put("group_code", resultSet.getString("group_code"));
                 row.put("group_name", resultSet.getString("group_name"));
-                row.put("avg_loss", resultSet.getDouble("avg_loss"));
-                row.put("max_loss", resultSet.getDouble("max_loss"));
-                row.put("min_loss", resultSet.getDouble("min_loss"));
-                row.put("similarity_score", resultSet.getDouble("similarity_score"));
+                row.put("avg_loss", df.format(resultSet.getDouble("avg_loss")));
+                row.put("max_loss", df.format(resultSet.getDouble("max_loss")));
+                row.put("min_loss", df.format(resultSet.getDouble("min_loss")));
+                row.put("similarity_score", df.format(resultSet.getDouble("similarity_score")));
                 results.add(row);
             }
         } catch (SQLException e) {
@@ -410,8 +412,8 @@ public class JDBCConnection {
         return results;
     }
 
-    public List<String> getCpcCodes() {
-        List<String> cpcCodes = new ArrayList<>();
+    public List<Commodity> getCpcCodes() {
+        List<Commodity> cpcCodes = new ArrayList<>();
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -454,10 +456,10 @@ public class JDBCConnection {
                             FROM GroupMetrics gm
                             CROSS JOIN SelectedGroupMetrics sg
                         )
-                        SELECT DISTINCT c.cpc_code
+                        SELECT DISTINCT c.cpc_code, c.descriptor, c.group_code
                         FROM Commodity c
                         JOIN SimilarGroups s ON c.group_code = s.group_code
-                        ORDER BY c.cpc_code;    
+                        ORDER BY c.cpc_code;
                     """;
 
             preparedStatement = connection.prepareStatement(sql);
@@ -468,7 +470,11 @@ public class JDBCConnection {
             // Process ResultSet and populate cpcCodes list
             while (resultSet.next()) {
                 String cpcCode = resultSet.getString("cpc_code");
-                cpcCodes.add(cpcCode);
+                String descriptor = resultSet.getString("descriptor");
+                String groupCode = resultSet.getString("group_code");
+                Commodity commodity = new Commodity(cpcCode, descriptor, groupCode);
+
+                cpcCodes.add(commodity);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -476,9 +482,12 @@ public class JDBCConnection {
         } finally {
             // Close resources
             try {
-                if (resultSet != null) resultSet.close();
-                if (preparedStatement != null) preparedStatement.close();
-                if (connection != null) connection.close();
+                if (resultSet != null)
+                    resultSet.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+                if (connection != null)
+                    connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
                 // Handle exception (log, throw, etc.)
