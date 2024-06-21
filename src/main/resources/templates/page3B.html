@@ -5,6 +5,8 @@
     <link rel="stylesheet" type="text/css" href="common.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="task3b.css" />
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
   </head>
   <body>
     <header th:replace="templates/components/navbar.html :: navbar"></header>
@@ -71,25 +73,57 @@
           </tr>
         </thead>
         <tbody>
-          <tr th:each="group : ${similarGroups}">
-            <td id="myId" th:text="${group.group_name}">
-              <pre>Group Name</pre>
+          <tr th:each="group, iterStat : ${similarGroups}">
+            <td
+              th:id="'group-name-' + ${iterStat.index}"
+              th:text="${group.group_name}"
+            >
+              Group Name
             </td>
-            <td th:text="${group.group_code}">Group Code</td>
-            <td th:text="${group.min_loss}">Min Loss</td>
-            <td th:text="${group.avg_loss}">Avg Loss</td>
-            <td th:text="${group.max_loss}">Max Loss</td>
-            <td th:text="${group.similarity_score}">Similarity Score</td>
+            <td
+              th:id="'group-code-' + ${iterStat.index}"
+              th:text="${group.group_code}"
+            >
+              Group Code
+            </td>
+            <td
+              th:id="'min-loss-' + ${iterStat.index}"
+              th:text="${group.min_loss}"
+            >
+              Min Loss
+            </td>
+            <td
+              th:id="'avg-loss-' + ${iterStat.index}"
+              th:text="${group.avg_loss}"
+            >
+              Avg Loss
+            </td>
+            <td
+              th:id="'max-loss-' + ${iterStat.index}"
+              th:text="${group.max_loss}"
+            >
+              Max Loss
+            </td>
+            <td
+              th:id="'similarity-score-' + ${iterStat.index}"
+              th:text="${group.similarity_score}"
+            >
+              Similarity Score
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
     <footer th:replace="templates/components/footer.html :: footer"></footer>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
     <script>
-      tippy("#myId", {
-        content: "My tooltip!",
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelectorAll('td[id^="group-name-"]')
+          .forEach(function (element) {
+            tippy(element, {
+              content: element.textContent,
+            });
+          });
       });
     </script>
   </body>
