@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Locations with Similar Food Loss</title>
+    <link rel="stylesheet" type="text/css" href="common.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="task3b.css" />
+  </head>
+  <body>
+    <header th:replace="templates/components/navbar.html :: navbar"></header>
+    <div class="container">
+      <div class="content-section">
+        <div class="text-center">
+          <h1 class="fs-primary-heading fw-bold">
+            Identify food group with Similar Food Loss n Waste %
+          </h1>
+        </div>
+      </div>
+    </div>
+    <div class="input-container">
+      <form action="/page3B.html" method="post">
+        <div class="input-group">
+          <label for="select-cpc-code">Select CPC Code:</label>
+          <select
+            id="select-cpc-code"
+            name="commodityCode"
+            th:field="*{commodityCode}"
+          >
+            <option value="" disabled selected>Select CPC Code</option>
+            <option
+              th:each="cpcCode : ${cpcCodes}"
+              th:value="${cpcCode}"
+              th:text="${cpcCode}"
+            ></option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="select-similarity-metric"
+            >Select Similarity Metric:</label
+          >
+          <select
+            id="select-similarity-metric"
+            name="similarityMetric"
+            th:field="*{similarityMetric}"
+          >
+            <option value="" disabled selected>Select Similarity Metric</option>
+            <option value="avg">Average Loss</option>
+            <option value="min">Minimum Loss</option>
+            <option value="max">Maximum Loss</option>
+          </select>
+        </div>
+        <div class="button-group">
+          <button type="submit" id="generate">Generate</button>
+        </div>
+      </form>
+    </div>
+
+    <div
+      class="data-table-container"
+      th:if="${not #lists.isEmpty(similarGroups)}"
+    >
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Group Name</th>
+            <th>Group Code</th>
+            <th>Min Loss</th>
+            <th>Avg Loss</th>
+            <th>Max Loss</th>
+            <th>Similarity Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="group : ${similarGroups}">
+            <td th:text="${group.group_name}"><pre>Group Name</pre></td>
+            <td th:text="${group.group_code}">Group Code</td>
+            <td th:text="${group.min_loss}">Min Loss</td>
+            <td th:text="${group.avg_loss}">Avg Loss</td>
+            <td th:text="${group.max_loss}">Max Loss</td>
+            <td th:text="${group.similarity_score}">Similarity Score</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer th:replace="templates/components/footer.html :: footer"></footer>
+  </body>
+</html>
