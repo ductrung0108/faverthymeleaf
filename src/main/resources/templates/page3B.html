@@ -72,7 +72,9 @@
         </thead>
         <tbody>
           <tr th:each="group : ${similarGroups}">
-            <td th:text="${group.group_name}"><pre>Group Name</pre></td>
+            <td id="myId" th:text="${group.group_name}">
+              <pre>Group Name</pre>
+            </td>
             <td th:text="${group.group_code}">Group Code</td>
             <td th:text="${group.min_loss}">Min Loss</td>
             <td th:text="${group.avg_loss}">Avg Loss</td>
@@ -83,5 +85,12 @@
       </table>
     </div>
     <footer th:replace="templates/components/footer.html :: footer"></footer>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script>
+      tippy("#myId", {
+        content: "My tooltip!",
+      });
+    </script>
   </body>
 </html>
