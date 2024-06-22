@@ -35,7 +35,7 @@ public class PageST2B implements Handler {
         JDBCConnection connection = new JDBCConnection();
         String fromYear = context.formParam("fromYear", "1900");
         String toYear = context.formParam("toYear", "3000");
-        String orderBy = context.formParam("orderBy", "year");
+        String orderBy = context.formParam("orderBy", "asc");
         String activity = context.formParam("activity");
         String foodsupplystage = context.formParam("foodsupplystage");
         String causeofloss = context.formParam("causeofloss");

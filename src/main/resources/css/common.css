@@ -8,6 +8,7 @@
 @import url(barchart.css);
 @import url(loadbar.css);
 @import url(task3b.css);
+@import url(aboutus.css)
 /*var css*/
 :root {
   --header-height: 3.5rem;

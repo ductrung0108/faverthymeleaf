@@ -227,9 +227,9 @@ public class JDBCConnection {
             f2 += " and s.food_supply_stage=e.food_supply_stage1";
         }
         if (ca) {
-            filter += ",cause_off_loss";
-            filter1 += ",cause_off_loss as cause_off_loss1";
-            f2 += " and s.cause_off_loss=e.cause_off_loss1";
+            filter += ",cause_of_loss";
+            filter1 += ",cause_of_loss as cause_of_loss1";
+            f2 += " and s.cause_of_loss=e.cause_of_loss1";
         }
 
         String fGStr = "";
@@ -265,7 +265,7 @@ public class JDBCConnection {
             query += " WHERE (year= '" + toYear + "') and (" + fGStr + ")";
             query += " GROUP BY foodgroup " + filter + ") e";
             query += " on s.foodgroup=e.foodgroup1" + f2;
-            query += " order by '" + orderBy + "'";
+            query += " order by diff " + orderBy + "";
 
             // Get Result
             System.out.println(query);
@@ -280,7 +280,7 @@ public class JDBCConnection {
                 String activity = ac ? (results.getString("activity") != null ? results.getString("activity")
                         : results.getString("activity1")) : null;
                 String foodSupplyStage = fs ? results.getString("food_supply_stage") : null;
-                String causeOffLoss = ca ? results.getString("cause_off_loss") : null;
+                String causeOffLoss = ca ? results.getString("cause_of_loss") : null;
                 // Create a Task2B Object
                 Task2B foodLossEvent = new Task2B(commodity, start, end, lossPercentage, activity, foodSupplyStage,
                         causeOffLoss);
