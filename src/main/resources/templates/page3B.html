@@ -67,10 +67,7 @@
         <thead>
           <tr>
             <th>Group Name</th>
-            <th>Group Code</th>
-            <th th:if="${similarityMetric}=='min'">Min Loss</th>
-            <th th:if="${similarityMetric}=='avg'">Avg Loss</th>
-            <th th:if="${similarityMetric}=='max'">Max Loss</th>
+            <th>Value used to determine</th>
             <th>Similarity Score</th>
           </tr>
         </thead>
@@ -80,40 +77,16 @@
               th:id="'group-name-' + ${iterStat.index}"
               th:text="${group.group_name}"
             >
-              Group Name
             </td>
             <td
-              th:id="'group-code-' + ${iterStat.index}"
-              th:text="${group.group_code}"
-            >
-              Group Code
-            </td>
-            <td
-              th:if="${similarityMetric}=='min'"
               th:id="'min-loss-' + ${iterStat.index}"
-              th:text="${group.min_loss}"
+              th:text="${group.value}"
             >
-              Min Loss
-            </td>
-            <td
-              th:if="${similarityMetric}=='avg'"
-              th:id="'avg-loss-' + ${iterStat.index}"
-              th:text="${group.avg_loss}"
-            >
-              Avg Loss
-            </td>
-            <td
-            th:if="${similarityMetric}=='max'"
-              th:id="'max-loss-' + ${iterStat.index}"
-              th:text="${group.max_loss}"
-            >
-              Max Loss
             </td>
             <td
               th:id="'similarity-score-' + ${iterStat.index}"
               th:text="${group.similarity_score}"
             >
-              Similarity Score
             </td>
           </tr>
         </tbody>

@@ -318,65 +318,89 @@ public class JDBCConnection {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
+        String limit="5";
+        String sort="asc";
+
         try {
             connection = DriverManager.getConnection(DATABASE);
 
             // Prepare the SQL query
-            String sql = """
-                        WITH CommodityGroup AS (
-                            SELECT DISTINCT c.group_code
-                            FROM Commodity c
-                            WHERE c.cpc_code = ?
-                        ),
-                        GroupMetrics AS (
-                            SELECT
-                                c.group_code,
-                                AVG(f.loss_percentage) AS avg_loss,
-                                MAX(f.loss_percentage) AS max_loss,
-                                MIN(f.loss_percentage) AS min_loss
-                            FROM FoodLossEvent f
-                            JOIN Commodity c ON f.cpc_code = c.cpc_code
-                            GROUP BY c.group_code
-                        ),
-                        SelectedGroupMetrics AS (
-                            SELECT
-                                g.group_code,
-                                g.avg_loss,
-                                g.max_loss,
-                                g.min_loss
-                            FROM GroupMetrics g
-                            JOIN CommodityGroup cg ON g.group_code = cg.group_code
-                        ),
-                        SimilarGroups AS (
-                            SELECT
-                                gm.group_code,
-                                gm.avg_loss,
-                                gm.max_loss,
-                                gm.min_loss,
-                                ABS(gm.avg_loss - sg.avg_loss) AS avg_diff,
-                                ABS(gm.max_loss - sg.max_loss) AS max_diff,
-                                ABS(gm.min_loss - sg.min_loss) AS min_diff
-                            FROM GroupMetrics gm
-                            CROSS JOIN SelectedGroupMetrics sg
-                        )
-                        SELECT
-                            s.group_code,
-                            (SELECT Descriptor FROM Commodity WHERE group_code = s.group_code LIMIT 1) AS group_name,
-                            s.avg_loss,
-                            s.max_loss,
-                            s.min_loss,
-                            CASE ? -- Change to the user-selected similarity metric ('avg', 'max', or 'min')
-                                WHEN 'avg' THEN s.avg_diff
-                                WHEN 'max' THEN s.max_diff
-                                WHEN 'min' THEN s.min_diff
-                            END AS similarity_score
-                        FROM SimilarGroups s
-                        ORDER BY similarity_score
-                    """;
+            String sql = "";
+
+            if(similarityMetric.equals("avg")) {
+                sql+="with t as (";
+                sql+="       select t1.groupp,loss/waste as val from ( ";
+                sql+="           select";
+                sql+="        groupp,max(loss) as loss";
+                sql+="       from (";
+                sql+="        select";
+                sql+="            cpc_code,substr(cpc_code,1,3) as groupp, avg(loss_percentage) as loss";
+                sql+="        from";
+                sql+="            foodlossevent";
+                sql+="        where";
+                sql+="            lostorwaste=1 or lostorwaste=2";
+                sql+="         group by";
+                sql+="             cpc_code";
+                sql+="         )";
+                sql+="         group by groupp";
+                sql+="         ) t1";
+                sql+="         join";
+                sql+="         (";
+                sql+="         select";
+                sql+="         groupp,max(waste) as waste";
+                sql+="         from (";
+                sql+="         select";
+                sql+="             cpc_code,substr(cpc_code,1,3) as groupp, avg(loss_percentage) as waste";
+                sql+="         from";
+                sql+="             foodlossevent";
+                sql+="         where";
+                sql+="             lostorwaste=0 or lostorwaste=2";
+                sql+="         group by";
+                sql+="             cpc_code";
+                sql+="         )";
+                sql+="         group by groupp";
+                sql+="         ) t2 on t1.groupp=t2.groupp";
+                sql+="         )";
+                sql+="         select descriptor,val,diff from (";
+                sql+="         select *,abs(val-(select val from t where groupp=substr('"+commodityCode+"',1,3))) as diff";
+                sql+="         from t";
+                sql+="         where groupp<>substr('"+commodityCode+"',1,3)";
+                sql+="         order by diff";
+                sql+="         limit "+limit;
+                sql+="         ) res join commodity on commodity.cpc_code=res.groupp";
+                sql+="         order by diff "+sort;
+            } else {
+                sql+=" with t as (";
+                sql+="    select ";
+                sql+="        groupp,"+similarityMetric+"(aa) as val ";
+                sql+="    from ( ";
+                sql+="    select ";
+                sql+="        cpc_code,substr(cpc_code,1,3) as groupp,avg(loss_percentage) as aa ";
+                sql+="    from ";
+                sql+="        foodlossevent ";
+                sql+="    group by ";
+                sql+="        cpc_code ";
+                sql+="    ) ";
+                sql+="    group by ";
+                sql+="        groupp ";
+                sql+="    ),res as ( ";
+                sql+="    select ";
+                sql+="        *,abs(val-(select val from t where groupp=substr('"+commodityCode+"',1,3))) as diff ";
+                sql+="    from ";
+                sql+="        t ";
+                sql+="    where ";
+                sql+="        groupp<>substr('"+commodityCode+"',1,3) ";
+                sql+="    order by ";
+                sql+="        diff ";
+                sql+="    limit "+limit;
+                sql+="    ) ";
+                sql+="    select c.descriptor,res.val,res.diff from res join commodity c on res.groupp=c.cpc_code ";
+                sql+="    order by diff "+sort;
+            }
+
+            System.out.println(similarityMetric);
 
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, commodityCode);
-            preparedStatement.setString(2, similarityMetric);
 
             // Execute the query
             resultSet = preparedStatement.executeQuery();
@@ -385,12 +409,9 @@ public class JDBCConnection {
             while (resultSet.next()) {
                 DecimalFormat df = new DecimalFormat("#,###.###");
                 Map<String, Object> row = new HashMap<>();
-                row.put("group_code", resultSet.getString("group_code"));
-                row.put("group_name", resultSet.getString("group_name"));
-                row.put("avg_loss", df.format(resultSet.getDouble("avg_loss")));
-                row.put("max_loss", df.format(resultSet.getDouble("max_loss")));
-                row.put("min_loss", df.format(resultSet.getDouble("min_loss")));
-                row.put("similarity_score", df.format(resultSet.getDouble("similarity_score")));
+                row.put("group_name", resultSet.getString("descriptor"));
+                row.put("value", df.format(resultSet.getDouble("val")));
+                row.put("similarity_score", df.format(resultSet.getDouble("diff")));
                 results.add(row);
             }
         } catch (SQLException e) {
